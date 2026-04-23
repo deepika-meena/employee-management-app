@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlparse
 
 
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+EMPLOYEE_ID_REGEX = re.compile(r"^[A-Za-z0-9_-]+$")
 REQUIRED_FIELDS = {"id", "name", "email", "department", "role", "hire_date"}
 
 
@@ -35,9 +36,9 @@ class EmployeeStore:
     def list(self, department: str | None = None) -> List[dict]:
         with self._lock:
             employees = [asdict(employee) for employee in self._employees.values()]
-        if department is None:
-            return employees
-        return [employee for employee in employees if employee["department"] == department]
+            if department is None:
+                return employees
+            return [employee for employee in employees if employee["department"] == department]
 
     def get(self, employee_id: str) -> dict | None:
         with self._lock:
@@ -84,6 +85,8 @@ class EmployeeStore:
 
         if not employee_id:
             raise ValidationError("id cannot be empty")
+        if not EMPLOYEE_ID_REGEX.match(employee_id):
+            raise ValidationError("id may only contain letters, numbers, '-' and '_'")
         if not name:
             raise ValidationError("name cannot be empty")
         if not department:
@@ -225,7 +228,9 @@ class EmployeeRequestHandler(BaseHTTPRequestHandler):
         if not path.startswith("/employees/"):
             return None
         employee_id = path[len("/employees/"):].strip()
-        return employee_id or None
+        if not employee_id or not EMPLOYEE_ID_REGEX.match(employee_id):
+            return None
+        return employee_id
 
     def log_message(self, message_format: str, *args) -> None:
         # Suppress default request logging to keep test and CLI output clean.
@@ -233,6 +238,8 @@ class EmployeeRequestHandler(BaseHTTPRequestHandler):
 
 
 def _is_valid_email(email: str) -> bool:
+    if email.count("@") != 1:
+        return False
     if not EMAIL_REGEX.match(email):
         return False
     if ".." in email:

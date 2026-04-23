@@ -124,6 +124,21 @@ class EmployeeApiTestCase(unittest.TestCase):
             "POST",
             "/employees",
             {
+                "id": "bad id!",
+                "name": "Bad Id",
+                "email": "bad.id@example.com",
+                "department": "Engineering",
+                "role": "Developer",
+                "hire_date": "2024-01-15",
+            },
+        )
+        self.assertEqual(status, 400)
+        self.assertIn("id", body["error"])
+
+        status, body = self.request(
+            "POST",
+            "/employees",
+            {
                 "id": "4",
                 "name": "Dot Dot",
                 "email": "dot.dot@domain..com",
