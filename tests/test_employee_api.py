@@ -24,6 +24,7 @@ class EmployeeApiTestCase(unittest.TestCase):
         EmployeeRequestHandler.store = EmployeeStore()
 
     def request(self, method: str, path: str, payload: dict | None = None):
+        """Send a JSON request to the test server and return (status, json_body)."""
         connection = HTTPConnection("127.0.0.1", self.port)
         body = None if payload is None else json.dumps(payload)
         headers = {"Content-Type": "application/json"} if payload is not None else {}
@@ -116,6 +117,21 @@ class EmployeeApiTestCase(unittest.TestCase):
             },
         )
 
+        self.assertEqual(status, 400)
+        self.assertIn("email", body["error"])
+
+        status, body = self.request(
+            "POST",
+            "/employees",
+            {
+                "id": "4",
+                "name": "Dot Dot",
+                "email": "dot.dot@domain..com",
+                "department": "Engineering",
+                "role": "Developer",
+                "hire_date": "2024-01-15",
+            },
+        )
         self.assertEqual(status, 400)
         self.assertIn("email", body["error"])
 

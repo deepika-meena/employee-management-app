@@ -90,7 +90,7 @@ class EmployeeStore:
             raise ValidationError("department cannot be empty")
         if not role:
             raise ValidationError("role cannot be empty")
-        if not EMAIL_REGEX.match(email):
+        if not _is_valid_email(email):
             raise ValidationError("email must be a valid email address")
         try:
             date.fromisoformat(hire_date)
@@ -228,7 +228,21 @@ class EmployeeRequestHandler(BaseHTTPRequestHandler):
         return employee_id or None
 
     def log_message(self, message_format: str, *args) -> None:
+        # Suppress default request logging to keep test and CLI output clean.
         return
+
+
+def _is_valid_email(email: str) -> bool:
+    if not EMAIL_REGEX.match(email):
+        return False
+    if ".." in email:
+        return False
+    local, domain = email.rsplit("@", 1)
+    if local.startswith(".") or local.endswith("."):
+        return False
+    if domain.startswith(".") or domain.endswith("."):
+        return False
+    return True
 
 
 def run_server(host: str = "127.0.0.1", port: int = 8000) -> ThreadingHTTPServer:
