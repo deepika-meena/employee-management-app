@@ -224,10 +224,10 @@ class EmployeeRequestHandler(BaseHTTPRequestHandler):
     def _employee_id(path: str) -> str | None:
         if not path.startswith("/employees/"):
             return None
-        employee_id = path[len("/employees/") :].strip()
+        employee_id = path[len("/employees/"):].strip()
         return employee_id or None
 
-    def log_message(self, format: str, *args) -> None:  # noqa: A003
+    def log_message(self, message_format: str, *args) -> None:
         return
 
 
